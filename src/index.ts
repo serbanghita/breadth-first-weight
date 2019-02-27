@@ -1,20 +1,16 @@
-import {getPage, IWebsitePage} from "./pages";
 import MemoryStorage, {IDBPage} from "./MemoryStorage";
-
-
-
-
-
-
-
+import {getPage, IWebsitePage} from "./pages";
 
 async function findLinks(page: IWebsitePage, depth: number) {
 
+    // Get relevant info from DOM.
     const title: string = await getPageTitle(page);
     const links: string[] = await getPageLinks(page);
 
+    // Save link data to DB.
     db.save(page.href, title, true, depth, links.length);
 
+    // For each links found, preliminary save them.
     links.forEach((link: string) => {
         db.save(link, "", false, depth, 0);
     });

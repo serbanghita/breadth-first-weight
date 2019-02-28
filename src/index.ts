@@ -1,22 +1,24 @@
 import MemoryStorage, {IDBPage} from "./MemoryStorage";
 import {getPage, IWebsitePage} from "./pages";
+import {sequentialPromises} from "./queue";
 
-async function findLinks(page: IWebsitePage, depth: number) {
+async function findLinks(page: IWebsitePage, depth: number, maxDepth: number): Promise<any> {
+
+    console.log(`findLinks for ${page.href} ${depth}`);
 
     // Get relevant info from DOM.
-    const title: string = await getPageTitle(page);
     const links: string[] = await getPageLinks(page);
 
     // Save link data to DB.
-    db.save(page.href, title, true, depth, links.length);
+    db.save(page.href, true, depth, links.length);
 
     // For each links found, preliminary save them.
     links.forEach((link: string) => {
-        db.save(link, "", false, depth, 0);
+        db.save(link, false, depth, 0);
     });
 
     // New links need to be addressed.
-    [...db.entries()]
+    const findLinksPromisesArr = [...db.entries()]
         .filter((a: [string, IDBPage]) => !a[1].visited)
         .sort((a: [string, IDBPage], b: [string, IDBPage]) => {
             if (a[1].weight > b[1].weight) {
@@ -26,17 +28,23 @@ async function findLinks(page: IWebsitePage, depth: number) {
             } else {
                 return 0;
             }
-        }).forEach((a: [string, IDBPage]) => {
-            const uncheckedPage = getPage(a[0]);
+        }).map((a: [string, IDBPage]) => {
+            const [href, newPage] = a;
+            const uncheckedPage = getPage(href);
+
             if (uncheckedPage) {
-                findLinks(uncheckedPage, ++a[1].depth);
+                return findLinks(uncheckedPage, newPage.depth + 1, maxDepth);
+            } else {
+                return Promise.reject(`No page found for ${href}.`);
             }
         });
 
-}
+    if (depth > maxDepth) {
+        return [];
+    }
 
-function getPageTitle(page: IWebsitePage): Promise<string> {
-    return Promise.resolve(page.title);
+    // return sequentialPromises(findLinksPromisesArr);
+    return Promise.all(findLinksPromisesArr);
 }
 
 function getPageLinks(page: IWebsitePage): Promise<string[]> {
@@ -47,6 +55,5 @@ const db = new MemoryStorage();
 
 const homePage = getPage("/");
 if (homePage) {
-    findLinks(homePage, 0).then(() => console.log(db.entries()));
-
+    findLinks(homePage, 0, 1).then(() => console.log(db.entries()));
 }

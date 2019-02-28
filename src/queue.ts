@@ -1,18 +1,44 @@
+export class PromiseQueue {
+    private queue: Array<{promise: Promise<any>, status: string}> = [];
+
+    public add(p: Promise<any>) {
+        this.queue.push({promise: p, status: "not_started"});
+    }
+
+    public getNotStarted() {
+        this.queue.filter((queueItem) => queueItem.status === "not_started");
+    }
+
+    public run() {
+
+    }
+}
+
+
+
+function myPromise(r: string) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve(r);
+        }, Math.floor(Math.random() * Math.floor(1000)));
+    });
+}
+
 const myTasks = [
-    Promise.resolve("boss1"),
-    Promise.resolve("boss2"),
-    Promise.resolve("boss3"),
-    Promise.resolve("boss4"),
-    Promise.resolve("boss5"),
-    Promise.resolve("boss6"),
-    Promise.resolve("boss7"),
-    Promise.resolve("boss8"),
-    Promise.resolve("boss9"),
-    Promise.resolve("boss10"),
+    myPromise("boss1"),
+    myPromise("boss2"),
+    myPromise("boss3"),
+    myPromise("boss4"),
+    myPromise("boss5"),
+    myPromise("boss6"),
+    myPromise("boss7"),
+    myPromise("boss8"),
+    myPromise("boss9"),
+    myPromise("boss10"),
 ];
 
 // Sequential.
-function sequential(tasks: Array<Promise<any>>) {
+export function sequentialPromises(tasks: Array<Promise<any>>): Promise<any[]> {
     return tasks.reduce((promiseChain: Promise<any[]>, currentTask: Promise<any>) => {
         return promiseChain.then((chainResults) =>
             currentTask.then((currentResult) => [ ...chainResults, currentResult ]),
@@ -34,7 +60,7 @@ function sequential(tasks: Array<Promise<any>>) {
 
 
 // Sequential batch.
-function chunk(array: any[], size: number): any[] {
+export function chunkArray(array: any[], size: number): any[] {
     if (!array) {
         return [];
     }
@@ -42,16 +68,16 @@ function chunk(array: any[], size: number): any[] {
     if (!firstChunk.length) {
         return array; // this is the base case to terminal the recursive
     }
-    return [firstChunk].concat(chunk(array.slice(size, array.length), size));
+    return [firstChunk].concat(chunkArray(array.slice(size, array.length), size));
 }
 
-const myTasksBatch = chunk(myTasks, 3);
+const myTasksBatch = chunkArray(myTasks, 3);
 // [ [ Promise { 'boss1' }, Promise { 'boss2' }, Promise { 'boss3' } ],
 //     [ Promise { 'boss4' }, Promise { 'boss5' }, Promise { 'boss6' } ],
 //     [ Promise { 'boss7' }, Promise { 'boss8' }, Promise { 'boss9' } ],
 //     [ Promise { 'boss10' } ] ]
 const a: Array<Promise<string[]>> = myTasksBatch.map((batch: Array<Promise<string>>) => {
-    return sequential(batch);
+    return sequentialPromises(batch);
 });
 // console.log(a);
 
@@ -60,7 +86,7 @@ const a: Array<Promise<string[]>> = myTasksBatch.map((batch: Array<Promise<strin
 // Promise { <pending> },
 // Promise { <pending> } ]
 
-sequential(a).then((results) => console.log(results));
+// sequentialPromises(a).then((results) => console.log(results));
 // [ [ 'boss1', 'boss2', 'boss3' ],
 //     [ 'boss4', 'boss5', 'boss6' ],
 //     [ 'boss7', 'boss8', 'boss9' ],

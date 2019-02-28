@@ -61,3 +61,7 @@ const a: Array<Promise<string[]>> = myTasksBatch.map((batch: Array<Promise<strin
 // Promise { <pending> } ]
 
 sequential(a).then((results) => console.log(results));
+// [ [ 'boss1', 'boss2', 'boss3' ],
+//     [ 'boss4', 'boss5', 'boss6' ],
+//     [ 'boss7', 'boss8', 'boss9' ],
+//     [ 'boss10' ] ]

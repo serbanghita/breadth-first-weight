@@ -6,7 +6,7 @@ interface IPageStore {
     weight: number;
 }
 
-class BreadthFirstSearchOnPages {
+export default class BreadthFirstSearchOnPages {
     public storage: Map<string, IPageStore> = new Map([]);
     public queue: Set<string> = new Set([]);
 
@@ -54,11 +54,11 @@ class BreadthFirstSearchOnPages {
 }
 
 // Bootstrap
-const a = new BreadthFirstSearchOnPages();
-a.start("/", 2);
-
-console.log(a.storage);
-console.log(a.queue);
+// const a = new BreadthFirstSearchOnPages();
+// a.start("/", 2);
+//
+// console.log(a.storage);
+// console.log(a.queue);
 
 // Map {
 //     '/' => { visited: true, depth: 0, weight: 1 },

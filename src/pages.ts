@@ -6,40 +6,68 @@ export interface IWebsitePage {
 const pages: IWebsitePage[] = [
     {
         href: "/",
-        links: [ "/", "/manual", "/faq", "/blog" ],
+        links: [ "/", "/a", "/b", "/c", "/d" ],
     },
     {
-        href: "/manual",
-        links: [ "/", "/faq", "/manual", "/blog", "/manual/page" ],
+        href: "/a",
+        links: [ "/", "/a", "/b", "/c", "/d" ],
     },
     {
-        href: "/manual/page",
-        links: [ "/", "/faq", "/manual", "/blog" ],
+        href: "/b",
+        links: [ "/", "/a", "/b", "/b/a", "/c", "/d" ],
+    },
+        {
+            href: "/b/a",
+            links: [ "/", "/a", "/b", "/c", "/d" ],
+        },
+            {
+                href: "/b/a/a",
+                links: [ "/b/a/a/a" ],
+            },
+                {
+                    href: "/b/a/a/a",
+                    links: [],
+                },
+    {
+        href: "/c",
+        links: [ "/", "/a", "/b", "/c", "/d" ],
     },
     {
-        href: "/faq",
-        links: [ "/", "/faq", "/manual", "/blog" ],
+        href: "/d",
+        links: [ "/", "/a", "/b", "/c", "/d", "/d/a", "/d/b", "/d/c", "/d/d" ],
     },
-    {
-        href: "/blog",
-        links: [ "/", "/faq", "/manual", "/blog", "/blog/post-first", "/blog/post-second", "/blog/post-third", "/blog/post-forth" ],
-    },
-    {
-        href: "/blog/post-first",
-        links: [ "/", "/faq", "/manual", "/blog" ],
-    },
-    {
-        href: "/blog/post-second",
-        links: [ ],
-    },
-    {
-        href: "/blog/post-third",
-        links: [ ],
-    },
-    {
-        href: "/blog/post-forth",
-        links: [ ],
-    },
+        {
+            href: "/d/a",
+            links: [ "/", "/a", "/b", "/c", "/d", "/d/a/a" ],
+        },
+            {
+                href: "/d/a/a",
+                links: [ ],
+            },
+        {
+            href: "/d/b",
+            links: [ "/d/b/a" ],
+        },
+            {
+                href: "/d/b/a",
+                links: [ "/d/b/a/a", "/d/b/a/b" ],
+            },
+                {
+                    href: "/d/b/a/a",
+                    links: [ ],
+                },
+                {
+                    href: "/d/b/a/b",
+                    links: [ ],
+                },
+        {
+            href: "/d/c",
+            links: [ ],
+        },
+        {
+            href: "/d/d",
+            links: [ ],
+        },
 ];
 
 export function getPage(href: string): IWebsitePage | undefined {

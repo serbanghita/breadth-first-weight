@@ -30,7 +30,7 @@ export default class BFSearch {
         const storage = this.storage;
         const queue = this.queue;
 
-        let depth: number = 1;
+        let depth: number = 0;
         let item = this.findItem(identifier);
         if (!item) {
             throw new Error(`Start page ${identifier} was not found.`);
@@ -46,12 +46,21 @@ export default class BFSearch {
             [...queue].forEach((itemIdentifier: string) => {
                 item = this.findItem(itemIdentifier);
                 if (!item) {
+                    queue.delete(itemIdentifier);
                     return;
                 }
 
-                // At this step we're only dealing with new items.
-                // We save the new item to storage.
-                storage.set(itemIdentifier, {visited: true, depth, weight: 0});
+                // At this step we're updating the item to mark it as visited.
+                const itemRecord = storage.get(itemIdentifier);
+
+                if (itemRecord) {
+                    itemRecord.visited = true;
+                    storage.set(itemIdentifier, itemRecord);
+                } else {
+                    storage.set(itemIdentifier, {visited: true, depth, weight: 0});
+                }
+
+                // No longer needed in queue.
                 queue.delete(itemIdentifier);
 
                 // At the next step check if item's children are repeating or new.
@@ -66,6 +75,7 @@ export default class BFSearch {
                             childItemRecord.weight += 1;
                             storage.set(childItemIdentifier, childItemRecord);
                         } else {
+                            storage.set(childItemIdentifier, {visited: false, depth: depth + 1, weight: 0});
                             queue.add(childItemIdentifier);
                         }
                     });

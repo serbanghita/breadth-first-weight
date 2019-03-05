@@ -3,7 +3,7 @@ import BFSearch from "./BFSearch";
 import items from "./items";
 
 const bfs = new BFSearch(items);
-bfs.start("/", 2);
+bfs.start("/", 1);
 
 console.log(bfs.storage);
 console.log(bfs.queue); //

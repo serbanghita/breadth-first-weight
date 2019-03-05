@@ -1,5 +1,3 @@
-import IListItem from "./items";
-
 export interface IListItem {
     identifier: string;
     children: string[];
@@ -8,6 +6,10 @@ export interface IListItem {
 interface IStorageItem {
     visited: boolean;
     depth: number;
+    weight: number;
+}
+
+interface IQueueItem {
     weight: number;
 }
 
@@ -23,45 +25,55 @@ export default class BFSearch {
         return this.items.find((a: IListItem) => a.identifier === identifier);
     }
 
-    public start(startIdentifier: string, maxDepth: number) {
-
-        const startPage = this.findItem(startIdentifier);
-        if (!startPage) {
-            throw new Error(`Start page ${startIdentifier} was not found.`);
-        }
+    public start(identifier: string, maxDepth: number) {
 
         const storage = this.storage;
-        let depth: number = 0;
+        const queue = this.queue;
 
-        storage.set(startPage.identifier, {visited: true, depth, weight: 0});
-        if (startPage.children.length > 0) {
-            this.queue = new Set([...this.queue].concat(startPage.children));
+        let depth: number = 1;
+        let item = this.findItem(identifier);
+        if (!item) {
+            throw new Error(`Start page ${identifier} was not found.`);
         }
 
-        while (this.queue.size > 0) {
-            depth += 1;
+        queue.add(item.identifier);
+
+        while (queue.size > 0) {
             if (depth > maxDepth) {
                 break;
             }
-            this.queue.forEach((identifier: string) => {
-                const childPage = this.findItem(identifier);
-                if (!childPage) {
+
+            [...queue].forEach((itemIdentifier: string) => {
+                item = this.findItem(itemIdentifier);
+                if (!item) {
                     return;
                 }
 
-                const childPageRecord = storage.get(identifier);
-                if (childPageRecord) {
-                    childPageRecord.weight += 1;
-                    storage.set(identifier, childPageRecord);
-                } else {
-                    storage.set(identifier, {visited: true, depth, weight: 0});
-                }
-                this.queue.delete(identifier);
-                if (childPage.children) {
-                    const newLinks = childPage.children.filter((childHref: string) => !storage.get(childHref));
-                    this.queue = new Set([...this.queue].concat(newLinks));
+                // At this step we're only dealing with new items.
+                // We save the new item to storage.
+                storage.set(itemIdentifier, {visited: true, depth, weight: 0});
+                queue.delete(itemIdentifier);
+
+                // At the next step check if item's children are repeating or new.
+                // New children are added to the queue.
+                if (item.children) {
+                    item.children.forEach((childItemIdentifier: string) => {
+                        const childItemRecord = storage.get(childItemIdentifier);
+
+                        // If we find an existing item we just increase it's weight.
+                        // There is no need to re-add it to queue.
+                        if (childItemRecord) {
+                            childItemRecord.weight += 1;
+                            storage.set(childItemIdentifier, childItemRecord);
+                        } else {
+                            queue.add(childItemIdentifier);
+                        }
+                    });
                 }
             });
+
+            depth += 1;
         }
+
     }
 }

@@ -5,12 +5,10 @@ export interface IListItem {
 
 interface IStorageItem {
     visited: boolean;
+    isMissing: boolean;
     depth: number;
     weight: number;
-}
 
-interface IQueueItem {
-    weight: number;
 }
 
 export default class BFSearch {
@@ -25,18 +23,22 @@ export default class BFSearch {
         return this.items.find((a: IListItem) => a.identifier === identifier);
     }
 
-    public start(identifier: string, maxDepth: number) {
+    public clear() {
+        this.storage.clear();
+        this.queue.clear();
+    }
+
+    public search(identifier: string, maxDepth: number) {
+
+        // Each search clears the previous results.
+        this.clear();
 
         const storage = this.storage;
         const queue = this.queue;
 
         let depth: number = 0;
-        let item = this.findItem(identifier);
-        if (!item) {
-            throw new Error(`Start page ${identifier} was not found.`);
-        }
 
-        queue.add(item.identifier);
+        queue.add(identifier);
 
         while (queue.size > 0) {
             if (depth > maxDepth) {
@@ -44,8 +46,13 @@ export default class BFSearch {
             }
 
             [...queue].forEach((itemIdentifier: string) => {
-                item = this.findItem(itemIdentifier);
+                const item = this.findItem(itemIdentifier);
+
+                // If the item doesn't exist in the list:
+                // - save the status to storage
+                // - exit the current iteration
                 if (!item) {
+                    storage.set(itemIdentifier, { visited: true, depth, weight: 0, isMissing: true});
                     queue.delete(itemIdentifier);
                     return;
                 }
@@ -57,7 +64,7 @@ export default class BFSearch {
                     itemRecord.visited = true;
                     storage.set(itemIdentifier, itemRecord);
                 } else {
-                    storage.set(itemIdentifier, {visited: true, depth, weight: 0});
+                    storage.set(itemIdentifier, {visited: true, depth, weight: 0, isMissing: false});
                 }
 
                 // No longer needed in queue.
@@ -75,7 +82,7 @@ export default class BFSearch {
                             childItemRecord.weight += 1;
                             storage.set(childItemIdentifier, childItemRecord);
                         } else {
-                            storage.set(childItemIdentifier, {visited: false, depth: depth + 1, weight: 0});
+                            storage.set(childItemIdentifier, {visited: false, depth: depth + 1, weight: 0, isMissing: false});
                             queue.add(childItemIdentifier);
                         }
                     });

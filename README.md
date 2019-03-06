@@ -1,6 +1,8 @@
 # Breadth-first search with weight scoring
 > Simulate HTTP browser link discovery.
 
+![](docs/bfs-weight-diagram.png)
+
 #### Install & Run
 
 * `npm install`

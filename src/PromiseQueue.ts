@@ -1,20 +1,3 @@
-export class PromiseQueue {
-    private queue: Array<{promise: Promise<any>, status: string}> = [];
-
-    public add(p: Promise<any>) {
-        this.queue.push({promise: p, status: "not_started"});
-    }
-
-    public getNotStarted() {
-        this.queue.filter((queueItem) => queueItem.status === "not_started");
-    }
-
-    public run() {
-
-    }
-}
-
-
 
 function myPromise(r: string) {
     return new Promise((resolve, reject) => {

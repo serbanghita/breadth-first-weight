@@ -3,7 +3,7 @@ export interface IListItem {
     children: string[];
 }
 
-interface IStorageItem {
+export interface IStorageItem {
     visited: boolean;
     isMissing: boolean;
     depth: number;
@@ -38,6 +38,10 @@ export default class BFSearch {
 
         let depth: number = 0;
 
+        // Add to queue the initial item.
+        // This is a particularity of HTTP crawling where you can
+        // start discovering links from any entry point (link) from
+        // a website and not necessary the first node in the graph.
         queue.add(identifier);
 
         while (queue.size > 0) {

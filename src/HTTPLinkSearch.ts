@@ -75,6 +75,10 @@ function sequentialFnPromises(tasks: Array<() => Promise<any>>) {
     }, Promise.resolve([]));
 }
 
+function parallelFnPromises(tasks: Array<() => Promise<any>>) {
+    return Promise.all(tasks.map((task) => task()));
+}
+
 export function chunkArray(array: any[], size: number): any[] {
     if (!array) {
         return [];
@@ -136,7 +140,8 @@ export default class HTTPLinkSearch {
         const fnArrayBatches = chunkArray(this.fnArray, 2);
 
         const fnSequenceBatches = fnArrayBatches.map((fnArrayBatch) => {
-            return () => sequentialFnPromises(fnArrayBatch).then((result) => {
+
+            return () => parallelFnPromises(fnArrayBatch).then((result) => {
                 result.forEach((nodeResult: IFnCallbackResponse) => {
                     const nodeResultRecord = storage.get(nodeResult.url);
 
@@ -187,9 +192,12 @@ export default class HTTPLinkSearch {
     }
 }
 
-const ls = new HTTPLinkSearch("https://www.mercedes-benz.ro/");
+const myUrl = "https://www.isleofdinosaurs.com/";
+const myURLObj = new URL(myUrl);
+const startTime = Date.now();
+const ls = new HTTPLinkSearch(myUrl);
 ls.search(1, async (url: string, knownUrlObj: URL) => {
-    const browser = await puppeteer.launch({headless: false});
+    const browser = await puppeteer.launch({headless: true});
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080});
     await page.goto(url, { waitUntil: ["load", "domcontentloaded", "networkidle0"] });
@@ -200,7 +208,7 @@ ls.search(1, async (url: string, knownUrlObj: URL) => {
 
     links = filterLinks(links, knownUrlObj);
 
-    console.log(url, "\n", "Links found on page:", links, "\n");
+    console.log(url, "\n\n", "Links found on page:", links, "\n");
 
     return {
         url,
@@ -208,7 +216,24 @@ ls.search(1, async (url: string, knownUrlObj: URL) => {
         children: links,
     };
 }).then(() => {
-    console.log("Done! Writing files ...");
-    writeToFile(process.cwd(), "storage.json", JSON.stringify([...ls.storage], null, "  "));
-    writeToFile(process.cwd(), "queue.json", JSON.stringify([...ls.queue], null, "  "));
+    const endTime = Date.now();
+    console.log(`Done indexing.`);
+
+    const report = {
+        "Browser orchestrator": "puppeteer",
+        "Browser batch size": 2,
+        "Website": myUrl,
+        "Process time": `${(endTime - startTime) / 1000}s`,
+        "Links found": ls.storage.size,
+        "Queue size": ls.queue.size,
+        "Max. depth": 1,
+    };
+    console.table([report]);
+
+    console.log(`Writing reports ...`);
+    writeToFile(process.cwd(), `${myURLObj.host}-report.json`, JSON.stringify(report, null, "  "));
+    writeToFile(process.cwd(), `${myURLObj.host}-storage.json`, JSON.stringify([...ls.storage], null, "  "));
+    writeToFile(process.cwd(), `${myURLObj.host}-queue.json`, JSON.stringify([...ls.queue], null, "  "));
+
+    console.log(`Done!`);
 });

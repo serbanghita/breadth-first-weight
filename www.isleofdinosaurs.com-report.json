@@ -1,0 +1,9 @@
+{
+  "Browser orchestrator": "puppeteer",
+  "Browser batch size": 2,
+  "Website": "https://www.isleofdinosaurs.com/",
+  "Process time": "4.089s",
+  "Links found": 1,
+  "Queue size": 0,
+  "Max. depth": 1
+}

@@ -21,7 +21,9 @@
   "devDependencies": {
     "@types/jest": "^24.0.9",
     "@types/node": "^11.9.5",
+    "@types/puppeteer": "^1.12.2",
     "jest": "^24.1.0",
+    "puppeteer": "^1.13.0",
     "ts-jest": "^24.0.0",
     "tslint": "^5.13.0",
     "typescript": "^3.3.3333"

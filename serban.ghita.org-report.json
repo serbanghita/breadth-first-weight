@@ -1,0 +1,10 @@
+{
+  "Browser orchestrator": "puppeteer",
+  "Browser batch size": 1,
+  "Website": "serban.ghita.org",
+  "Process time": "0.423s",
+  "Memory report": "Total Heap: 0.5 MB Heap used: 1.1 MB RSS: 1.04 MB",
+  "Links found": 1,
+  "Queue size": 0,
+  "Max. depth": 0
+}

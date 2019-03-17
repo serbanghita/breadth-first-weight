@@ -1,9 +1,10 @@
 {
   "Browser orchestrator": "puppeteer",
-  "Browser batch size": 2,
-  "Website": "https://www.isleofdinosaurs.com/",
-  "Process time": "4.089s",
-  "Links found": 1,
-  "Queue size": 0,
-  "Max. depth": 1
+  "Browser batch size": 1,
+  "Website": "www.isleofdinosaurs.com",
+  "Process time": "9.804s",
+  "Memory report": "Total Heap: -4 MB Heap used: 1.25 MB RSS: 2.41 MB",
+  "Links found": 56,
+  "Queue size": 55,
+  "Max. depth": 0
 }

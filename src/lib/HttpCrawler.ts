@@ -1,5 +1,4 @@
-
-import {URL} from "url";
+import puppeteer from "puppeteer";
 
 function sequentialFnPromises(tasks: Array<() => Promise<any>>) {
     return tasks.reduce((promiseChain: Promise<any[]>, currentTask: () => Promise<any>) => {
@@ -54,6 +53,10 @@ interface IResponse {
     metrics: Record<string, number>;
     errorMessage: string;
     errorCode: string;
+}
+
+export interface IHttpCrawlerMetrics extends puppeteer.Metrics {
+    [metricName: string]: number;
 }
 
 export default class HttpCrawler {

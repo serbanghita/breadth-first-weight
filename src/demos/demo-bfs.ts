@@ -1,5 +1,5 @@
 // Bootstrap
-import BFSearch, {IListItem} from "./BFSearch";
+import BFSearch, {IListItem} from "../lib/BFSearch";
 
 const websiteLinks: IListItem[] = [
     {

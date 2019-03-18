@@ -7,6 +7,7 @@ module.exports = {
         "<rootDir>/src/**/*.ts",
         "!<rootDir>/src/**/*.d.ts",
         "!<rootDir>/src/**/*.test.ts",
+        "!**/__mocks__/**",
         "!**/node_modules/**"
     ],
     coverageDirectory: ".tmp/coverage",

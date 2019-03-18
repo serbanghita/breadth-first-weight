@@ -140,7 +140,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
         // 4. Open the page URL.
         // 404 is not considered an Error.
         const navigationOptions = {
-            waitUntil: ["load", "domcontentloaded", "networkidle0"] as puppeteer.LoadEvent[]
+            waitUntil: ["load", "domcontentloaded", "networkidle0"] as puppeteer.LoadEvent[],
         } as DirectNavigationOptions;
         const response = await page.goto(url, navigationOptions)
             .then((pageResponse: Response | null) => {
@@ -203,7 +203,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
             links: [],
             headers: {},
             metrics: {},
-            errorMessage: err.toString(),
+            errorMessage: err.message,
             errorCode: err.code,
         };
     }

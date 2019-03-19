@@ -2,7 +2,8 @@ import puppeteer, {DirectNavigationOptions, Response} from "puppeteer";
 import {URL} from "url";
 import {writeToFile} from "./FileSystem";
 import {IHttpCrawlerMetrics, IHttpCrawlerOptions} from "./HttpCrawler";
-import HttpCrawlerError from "./HttpCrawlerError";
+import HttpCrawlerContentError from "./HttpCrawlerContentError";
+import HttpCrawlerRuntimeError from "./HttpCrawlerRuntimeError";
 
 /**
  * This is a file containing all the private functions needed for
@@ -12,7 +13,6 @@ import HttpCrawlerError from "./HttpCrawlerError";
  * browser orchestrator that plugs into HttpCrawler(options, requestFn)
  * in order to gather custom data while crawling through pages.
  */
-
 
 /**
  * Check if the link object provided is of the root URL
@@ -96,9 +96,9 @@ function getAllDOMLinks(): string[] {
 
 /**
  * Logs the error (file, stdout, etc).
- * @param {HttpCrawlerError} err
+ * @param {HttpCrawlerRuntimeError} err
  */
-function logger(err: HttpCrawlerError) {
+function logger(err: HttpCrawlerRuntimeError) {
     writeToFile(process.cwd(), "error-log.txt", err.toString());
     console.log(`${err.code}: ${err.message}`);
 }
@@ -118,18 +118,18 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
         // 1. Create browser instance.
         const browser = await puppeteer.launch({headless: true})
             .catch((err) => {
-                throw new HttpCrawlerError("ERR_CREATE_BROWSER", err);
+                throw new HttpCrawlerRuntimeError("ERR_CREATE_BROWSER", err);
             });
 
         // 2. Create page instance.
         const page = await browser.newPage()
             .catch((err) => {
-                throw new HttpCrawlerError("ERR_CREATE_PAGE", err);
+                throw new HttpCrawlerRuntimeError("ERR_CREATE_PAGE", err);
             });
 
         await page.setViewport({...options.browserViewport})
             .catch((err) => {
-                throw new HttpCrawlerError("ERR_SET_VIEWPORT", err);
+                throw new HttpCrawlerRuntimeError("ERR_SET_VIEWPORT", err);
             });
 
         // 3. Subscribe to all desired page/console messages.
@@ -145,12 +145,12 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
         const response = await page.goto(url, navigationOptions)
             .then((pageResponse: Response | null) => {
                 if (pageResponse === null) {
-                    throw new HttpCrawlerError("ERR_OPEN_PAGE", new Error("Request is null"));
+                    throw new HttpCrawlerRuntimeError("ERR_OPEN_PAGE", new Error("Request is null"));
                 }
                 return pageResponse;
             })
             .catch((err: Error) => {
-                throw new HttpCrawlerError("ERR_OPEN_PAGE", err);
+                throw new HttpCrawlerRuntimeError("ERR_OPEN_PAGE", err);
             });
 
         // In case of an HTTP error, we don't care about the
@@ -169,7 +169,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
 
         await page.waitForSelector("body", { visible: true })
             .catch((err: Error) => {
-                throw new HttpCrawlerError("ERR_BODY_LOAD", err);
+                throw new HttpCrawlerContentError("ERR_BODY_LOAD", response, err);
             });
 
         const links: string[] | void = await page.evaluate(getAllDOMLinks)
@@ -177,7 +177,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
                 return filterLinks(linksFound, new URL(options.url));
             })
             .catch((err: Error) => {
-                logger(new HttpCrawlerError("ERR_GET_ALL_DOM_LINKS", err));
+                logger(new HttpCrawlerContentError("ERR_GET_ALL_DOM_LINKS", response, err));
                 return [];
             });
 
@@ -197,11 +197,17 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
         };
 
     } catch (err) {
+        let status = 0;
+        let headers = {};
+        if (err instanceof HttpCrawlerContentError) {
+            status = err.response.status();
+            headers = err.response.headers();
+        }
         return {
             url,
-            status: 0,
+            status,
             links: [],
-            headers: {},
+            headers,
             metrics: {},
             errorMessage: err.message,
             errorCode: err.code,

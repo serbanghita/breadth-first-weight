@@ -45,7 +45,7 @@ export interface IHttpCrawlerOptions {
     browserViewport: { width: number, height: number };
 }
 
-interface IResponse {
+export interface IResponse {
     url: string;
     status: number;
     links: string[];
@@ -83,11 +83,11 @@ export default class HttpCrawler {
         const requestFn = this.requestFn;
 
         if (queue.size === 0) {
-            return Promise.reject(`Queue is empty. Add something to queue before searching.`);
+            return Promise.reject(new Error(`Queue is empty. Add something to queue before searching.`));
         }
 
         if (this.depth > linkDepth) {
-            return Promise.reject(`Maximum depth of ${linkDepth} reached.`);
+            return Promise.reject(new Error(`Maximum depth of ${linkDepth} reached.`));
         }
 
         this.fnArray = [...queue].map((urlInQueue) => {

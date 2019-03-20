@@ -34,6 +34,9 @@ interface IStorageItem {
     metrics: Record<string, number>;
     errorMessage: string;
     errorCode: string;
+    redirected: boolean;
+    redirectStatus: number;
+    redirectOriginalLocation: string;
 }
 
 export interface IHttpCrawlerOptions {
@@ -43,6 +46,7 @@ export interface IHttpCrawlerOptions {
     linkLimit: number;
     knownHosts: string[];
     browserViewport: { width: number, height: number };
+    ignoreLinkExtensions: string[];
 }
 
 export interface IResponse {
@@ -53,6 +57,9 @@ export interface IResponse {
     metrics: Record<string, number>;
     errorMessage: string;
     errorCode: string;
+    redirected: boolean;
+    redirectStatus: number;
+    redirectOriginalLocation: string;
 }
 
 export interface IHttpCrawlerMetrics extends puppeteer.Metrics {
@@ -118,6 +125,9 @@ export default class HttpCrawler {
                             metrics: response.metrics,
                             errorMessage: response.errorMessage,
                             errorCode: response.errorCode,
+                            redirected: response.redirected,
+                            redirectStatus: response.redirectStatus,
+                            redirectOriginalLocation: response.redirectOriginalLocation,
                         });
                     }
 
@@ -138,6 +148,9 @@ export default class HttpCrawler {
                                 metrics: {},
                                 errorMessage: "",
                                 errorCode: "",
+                                redirected: false,
+                                redirectStatus: 0,
+                                redirectOriginalLocation: "",
                             });
                             queue.add(childLink);
                         }
@@ -151,7 +164,7 @@ export default class HttpCrawler {
 
             if (queue.size > 0) {
                 return this.search().catch((err) => {
-                    console.log(err);
+                    console.log(err.message);
                 });
             }
         });

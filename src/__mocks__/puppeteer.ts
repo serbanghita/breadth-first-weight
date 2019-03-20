@@ -4,14 +4,12 @@ import {
     EvaluateFn, EvaluateFnReturnType,
     Headers,
     LaunchOptions,
-    Page,
+    Page, Request,
     Response,
     SerializableOrJSHandle,
     Viewport,
     WaitForSelectorOptions
 } from "puppeteer";
-import fn = jest.fn;
-import {IHttpCrawlerMetrics} from "../lib/HttpCrawler";
 
 const puppeteer = jest.genMockFromModule("puppeteer") as any;
 
@@ -119,6 +117,9 @@ export function __setMock(name: string): void {
                                 headers: () => {
                                     return { "content-type": "text/html;charset=utf-8" } as Headers;
                                 },
+                                request: () => {
+                                    return { redirectChain: () => [] as Request[] } as Request;
+                                },
                             } as Response);
                         },
                         waitForSelector(selector: string, selectorOptions: WaitForSelectorOptions) {
@@ -151,6 +152,9 @@ export function __setMock(name: string): void {
                                 status: () => 200,
                                 headers: () => {
                                     return { "content-type": "text/html;charset=utf-8" } as Headers;
+                                },
+                                request: () => {
+                                    return { redirectChain: () => [] as Request[] } as Request;
                                 },
                             } as Response);
                         },

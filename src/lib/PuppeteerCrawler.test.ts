@@ -203,7 +203,7 @@ describe("PuppeteerCrawler", () => {
             expect(response).toHaveProperty("status", 200);
             expect(response).toHaveProperty("links", ["http://test.com/a", "http://test.com/b"]);
             expect(response).toHaveProperty("headers", { "content-type": "text/html;charset=utf-8" });
-            expect(response).toHaveProperty("metrics", { Timestamp: 1});
+            expect(response).toHaveProperty("metrics", { Timestamp: 1 });
             expect(response).toHaveProperty("errorMessage", "");
             expect(response).toHaveProperty("errorCode", "");
         });

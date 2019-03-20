@@ -1,7 +1,7 @@
 import puppeteer, {DirectNavigationOptions, Response} from "puppeteer";
 import {URL} from "url";
 import {writeToFile} from "./FileSystem";
-import {IHttpCrawlerMetrics, IHttpCrawlerOptions} from "./HttpCrawler";
+import {IHttpCrawlerMetrics, IHttpCrawlerOptions, IResponse} from "./HttpCrawler";
 import HttpCrawlerContentError from "./HttpCrawlerContentError";
 import HttpCrawlerRuntimeError from "./HttpCrawlerRuntimeError";
 
@@ -112,7 +112,7 @@ function logger(err: HttpCrawlerRuntimeError) {
  * @param {IHttpCrawlerOptions} options
  * @returns {Promise<IResponse>}
  */
-export async function requestHandleFn(url: string, options: IHttpCrawlerOptions) {
+export async function requestHandleFn(url: string, options: IHttpCrawlerOptions): Promise<IResponse> {
 
     try {
         // 1. Create browser instance.
@@ -164,6 +164,9 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
                 metrics: {},
                 errorMessage: "HTTP Error",
                 errorCode: "ERR_HTTP_ERROR",
+                redirected: false,
+                redirectStatus: 0,
+                redirectOriginalLocation: "",
             };
         }
 
@@ -186,7 +189,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
         await page.close();
         await browser.close();
 
-        return {
+        const result: IResponse = {
             url,
             status: response.status(),
             links,
@@ -194,7 +197,25 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
             metrics,
             errorMessage: "",
             errorCode: "",
+            redirected: false,
+            redirectStatus: 0,
+            redirectOriginalLocation: "",
+
         };
+
+        // If the request was redirected (301, 302) then
+        // map the details of the first redirect in the chain.
+        const redirectChain = response.request().redirectChain();
+        if (redirectChain.length > 0) {
+            const firstRedirectResponse = redirectChain[0].response();
+            if (firstRedirectResponse !== null) {
+                result.redirected = true;
+                result.redirectStatus = firstRedirectResponse.status();
+                result.redirectOriginalLocation = firstRedirectResponse.url();
+            }
+        }
+
+        return result;
 
     } catch (err) {
         let status = 0;
@@ -211,6 +232,9 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
             metrics: {},
             errorMessage: err.message,
             errorCode: err.code,
+            redirected: false,
+            redirectStatus: 0,
+            redirectOriginalLocation: "",
         };
     }
 }

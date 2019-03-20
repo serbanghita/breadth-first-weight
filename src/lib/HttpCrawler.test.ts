@@ -3,13 +3,14 @@ import HttpCrawler, {IHttpCrawlerOptions, IResponse} from "./HttpCrawler";
 describe("HttpCrawler", () => {
 
     it("constructor adds url option to the queue", () => {
-        const cOpt = {
+        const cOpt: IHttpCrawlerOptions = {
             url: "http://test.com",
             requestsPerBatch: 1,
             linkDepth: 0,
             linkLimit: 1,
             knownHosts: [],
             browserViewport: { width: 100, height: 100 },
+            ignoreLinkExtensions: [],
         };
         const requestFn = (url: string, options: IHttpCrawlerOptions) => {
             return Promise.resolve({}) as Promise<IResponse>;
@@ -21,13 +22,14 @@ describe("HttpCrawler", () => {
 
     describe("search", () => {
         it("visiting with linkDepth 0", async () => {
-            const cOpt = {
+            const cOpt: IHttpCrawlerOptions = {
                 url: "http://test.com",
                 requestsPerBatch: 1,
                 linkDepth: 0,
                 linkLimit: 1,
                 knownHosts: [],
                 browserViewport: { width: 100, height: 100 },
+                ignoreLinkExtensions: [],
             };
             let requestFnCalls = 0;
             const requestFn = (url: string, options: IHttpCrawlerOptions) => {
@@ -60,13 +62,14 @@ describe("HttpCrawler", () => {
                 return links[link];
             }
 
-            const cOpt = {
+            const cOpt: IHttpCrawlerOptions = {
                 url: "http://test.com",
                 requestsPerBatch: 1,
                 linkDepth: 1,
                 linkLimit: 99,
                 knownHosts: [],
                 browserViewport: { width: 100, height: 100 },
+                ignoreLinkExtensions: [],
             };
             let requestFnCalls = 0;
             const requestFn = (url: string, options: IHttpCrawlerOptions) => {
@@ -94,13 +97,14 @@ describe("HttpCrawler", () => {
         });
 
         it("requestFn responds with a different URL", async () => {
-            const cOpt = {
+            const cOpt: IHttpCrawlerOptions = {
                 url: "http://test.com",
                 requestsPerBatch: 1,
                 linkDepth: 0,
                 linkLimit: 99,
                 knownHosts: [],
                 browserViewport: { width: 100, height: 100 },
+                ignoreLinkExtensions: [],
             };
             let requestFnCalls = 0;
             const requestFn = (url: string, options: IHttpCrawlerOptions) => {

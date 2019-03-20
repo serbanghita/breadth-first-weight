@@ -3,3 +3,4 @@ build
 .idea
 .tmp
 reports
+error-log.txt

@@ -1,9 +1,11 @@
-import puppeteer, {DirectNavigationOptions, Response} from "puppeteer";
-import {URL} from "url";
-import {writeToFile} from "./FileSystem";
-import {IHttpCrawlerMetrics, IHttpCrawlerOptions, IResponse} from "./HttpCrawler";
+import * as path from "path";
+import puppeteer, { Browser, DirectNavigationOptions, Page, Response } from "puppeteer";
+import { URL } from "url";
+import { appendToFile, writeToFile } from "./FileSystem";
+import { IHttpCrawlerMetrics, IHttpCrawlerOptions, IResponse } from "./HttpCrawler";
 import HttpCrawlerContentError from "./HttpCrawlerContentError";
 import HttpCrawlerRuntimeError from "./HttpCrawlerRuntimeError";
+import { hashString } from "./Utility";
 
 /**
  * This is a file containing all the private functions needed for
@@ -94,13 +96,19 @@ function getAllDOMLinks(): string[] {
     ) as string[];
 }
 
-/**
- * Logs the error (file, stdout, etc).
- * @param {HttpCrawlerRuntimeError} err
- */
-function logger(err: HttpCrawlerRuntimeError) {
-    writeToFile(process.cwd(), "error-log.txt", err.toString());
-    console.log(`${err.code}: ${err.message}`);
+export type EventMessageLevel = "info" | "warning" | "error";
+export type EventMessageType = "css" | "js" | "html" | "security" | "network" | "browser";
+export interface IBrowserEventMessage {
+    identifier: string;
+    level: EventMessageLevel;
+    type: EventMessageType;
+    text: string;
+    details: any;
+}
+
+export function isEventMessageLevel(value: EventMessageLevel | string): value is EventMessageLevel {
+    const allowedKeys: string[] = ["info", "warning", "error"];
+    return allowedKeys.find((el) => el === value) !== undefined;
 }
 
 /**
@@ -114,42 +122,143 @@ function logger(err: HttpCrawlerRuntimeError) {
  */
 export async function requestHandleFn(url: string, options: IHttpCrawlerOptions): Promise<IResponse> {
 
+    let browser: Browser | undefined;
+    let page: Page | undefined;
+    let response: Response | undefined;
+    let pageBrowserConsoleEvents: IBrowserEventMessage[] = [];
+
+    function log(...msg: string[]) {
+        // appendToFile(options.reportsPath, "messages.log", msg.join(" "));
+        console.log(`debug:`, msg);
+    }
+
+    async function cleanupBrowser() {
+        if (typeof browser !== "undefined") {
+            await browser.close().catch((err: Error) => log("browser.close():", err.message));
+        }
+    }
+
+    async function cleanupPage() {
+        if (typeof page !== "undefined") {
+            await page.off("error", errorListener);
+            await page.off("pageerror", pageErrorListener);
+            await page.off("console", consoleListener);
+            await page.close().catch((err) => log("page.close():", err.message, (page as Page).url()));
+        }
+        // Clear the saved Developer Console msgs.
+        pageBrowserConsoleEvents = [];
+    }
+
+    // Custom event listeners.
+
+    function errorListener(err: Error) {
+        log("errorListener():", err.message);
+
+        const level = "error";
+        const type = "browser";
+        const text = err.message;
+        const details = ""; // msg.stack,
+        const identifier = hashString(`${level}-${type}-${text}`);
+
+        pageBrowserConsoleEvents.push({ identifier, level, type, text, details });
+    }
+
+    // eg. [Error: ReferenceError: nonExistentVar is not defined at https://serbanghita.github.io/website-tests/:7:2]
+    function pageErrorListener(msg: Error) {
+        const level = "error";
+        const type = "js";
+        const text = msg.message;
+        const details = ""; // msg.stack
+        const identifier = hashString(`${level}-${type}-${text}`);
+
+        pageBrowserConsoleEvents.push({ identifier, level, type, text, details });
+    }
+
+    function consoleListener(msg: puppeteer.ConsoleMessage) {
+        const level = isEventMessageLevel(msg.type()) ? msg.type() as EventMessageLevel : "info";
+        const type = "browser";
+        const text = msg.text();
+        const details = "";
+        const identifier = hashString(`${level}-${type}-${text}`);
+
+        pageBrowserConsoleEvents.push({ identifier, level, type, text, details });
+    }
+
+    function requestFailedListener(request: puppeteer.Request) {
+        const failure = request.failure();
+        const level = "error";
+        const type = "network";
+        const text = failure && failure.errorText || "";
+        const identifier = hashString(`${level}-${type}-${text}`);
+
+        pageBrowserConsoleEvents.push({
+            identifier, level, type, text,
+            details: {
+                url: request.url(),
+                obj: "", // request
+            },
+        });
+    }
+
+    async function requestFinishedListener(request: puppeteer.Request) {
+        const resp = request.response();
+
+        if (resp && resp.status() >= 400) {
+            const level = "error";
+            const type = "network";
+            const text = resp.statusText();
+            const identifier = hashString(`${level}-${type}-${text}`);
+
+            pageBrowserConsoleEvents.push({
+                identifier, level, type, text,
+                details: {
+                    method: request.method(),
+                    httpStatusCode: resp.status(),
+                    uri: resp.url(),
+                    timestamp: (resp.status() as any).date,
+                },
+            });
+        }
+    }
+
     try {
         // 1. Create browser instance.
-        const browser = await puppeteer.launch({headless: true})
-            .catch((err) => {
+        browser = await puppeteer.launch({ headless: true })
+            .catch(async (err) => {
                 throw new HttpCrawlerRuntimeError("ERR_CREATE_BROWSER", err);
             });
 
         // 2. Create page instance.
-        const page = await browser.newPage()
-            .catch((err) => {
+        page = await browser.newPage()
+            .catch(async (err) => {
                 throw new HttpCrawlerRuntimeError("ERR_CREATE_PAGE", err);
             });
 
-        await page.setViewport({...options.browserViewport})
-            .catch((err) => {
+        await page.setViewport({ ...options.browserViewport })
+            .catch(async (err) => {
                 throw new HttpCrawlerRuntimeError("ERR_SET_VIEWPORT", err);
             });
 
         // 3. Subscribe to all desired page/console messages.
-        page.on("error", (error: Error) => {
-            console.log("page error", error);
-        });
+        page.on("error", errorListener);
+        page.on("pageerror", pageErrorListener);
+        page.on("console", consoleListener);
+        page.on("requestfailed", requestFailedListener);
+        page.on("requestfinished", requestFinishedListener);
 
         // 4. Open the page URL.
         // 404 is not considered an Error.
         const navigationOptions = {
             waitUntil: ["load", "domcontentloaded", "networkidle0"] as puppeteer.LoadEvent[],
         } as DirectNavigationOptions;
-        const response = await page.goto(url, navigationOptions)
-            .then((pageResponse: Response | null) => {
+        response = await page.goto(url, navigationOptions)
+            .then(async (pageResponse: Response | null) => {
                 if (pageResponse === null) {
                     throw new HttpCrawlerRuntimeError("ERR_OPEN_PAGE", new Error("Request is null"));
                 }
                 return pageResponse;
             })
-            .catch((err: Error) => {
+            .catch(async (err: Error) => {
                 throw new HttpCrawlerRuntimeError("ERR_OPEN_PAGE", err);
             });
 
@@ -172,7 +281,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
 
         await page.waitForSelector("body", { visible: true })
             .catch((err: Error) => {
-                throw new HttpCrawlerContentError("ERR_BODY_LOAD", response, err);
+                throw new HttpCrawlerContentError("ERR_BODY_LOAD", err);
             });
 
         const links: string[] | void = await page.evaluate(getAllDOMLinks)
@@ -180,14 +289,14 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
                 return filterLinks(linksFound, new URL(options.url));
             })
             .catch((err: Error) => {
-                logger(new HttpCrawlerContentError("ERR_GET_ALL_DOM_LINKS", response, err));
+                log("page.evaluate(getAllDOMLinks):", err.message);
                 return [];
             });
 
         const metrics = await page.metrics() as IHttpCrawlerMetrics;
 
-        await page.close();
-        await browser.close();
+        await cleanupBrowser();
+        await cleanupPage();
 
         const result: IResponse = {
             url,
@@ -218,17 +327,22 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
         return result;
 
     } catch (err) {
+        await cleanupBrowser();
+        await cleanupPage();
+
+        log("Exception:", err.code, err.message, response ? response.url() : "");
+
         let status = 0;
         let headers = {};
-        if (err instanceof HttpCrawlerContentError) {
-            status = err.response.status();
-            headers = err.response.headers();
+        if (err instanceof HttpCrawlerContentError && typeof response !== "undefined") {
+            status = response.status();
+            headers = response.headers();
         }
         return {
             url,
             status,
-            links: [],
             headers,
+            links: [],
             metrics: {},
             errorMessage: err.message,
             errorCode: err.code,

@@ -11,6 +11,7 @@ describe("HttpCrawler", () => {
             knownHosts: [],
             browserViewport: { width: 100, height: 100 },
             ignoreLinkExtensions: [],
+            reportsPath: "",
         };
         const requestFn = (url: string, options: IHttpCrawlerOptions) => {
             return Promise.resolve({}) as Promise<IResponse>;
@@ -30,6 +31,7 @@ describe("HttpCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 100, height: 100 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             let requestFnCalls = 0;
             const requestFn = (url: string, options: IHttpCrawlerOptions) => {
@@ -70,6 +72,7 @@ describe("HttpCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 100, height: 100 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             let requestFnCalls = 0;
             const requestFn = (url: string, options: IHttpCrawlerOptions) => {
@@ -105,6 +108,7 @@ describe("HttpCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 100, height: 100 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             let requestFnCalls = 0;
             const requestFn = (url: string, options: IHttpCrawlerOptions) => {

@@ -21,6 +21,7 @@ describe("PuppeteerCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
 
@@ -44,6 +45,7 @@ describe("PuppeteerCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
 
@@ -67,6 +69,7 @@ describe("PuppeteerCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
 
@@ -90,6 +93,7 @@ describe("PuppeteerCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
 
@@ -113,6 +117,7 @@ describe("PuppeteerCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
 
@@ -136,6 +141,7 @@ describe("PuppeteerCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/404", requestOptions);
 
@@ -159,6 +165,7 @@ describe("PuppeteerCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
 
@@ -182,6 +189,7 @@ describe("PuppeteerCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
 
@@ -205,6 +213,7 @@ describe("PuppeteerCrawler", () => {
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
                 ignoreLinkExtensions: [],
+                reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
 

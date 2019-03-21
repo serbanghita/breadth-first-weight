@@ -63,7 +63,11 @@ const crawlerOptions = {
     knownHosts: [""],
     browserViewport: { width: 1920, height: 1080 },
     ignoreLinkExtensions: ["pdf", "doc", "xls", "zip", "rar", "txt", "jpg", "png", "gif"],
+    reportsPath: path.join(process.cwd(), "reports", (new URL(cliOptions.url)).host, Date.now().toString()),
 };
+
+createDir(crawlerOptions.reportsPath);
+
 const crawlerInstance = new HttpCrawler(crawlerOptions, requestHandleFn);
 
 const startTime = Date.now();
@@ -107,11 +111,10 @@ crawlerInstance.search().then(() => {
 
     console.log(`Writing reports ...`);
 
-    const reportsFolder = path.join(process.cwd(), "reports", urlObj.host);
-    createDir(reportsFolder);
-    writeToFile(reportsFolder, `report.json`, JSON.stringify(report, null, "  "));
-    writeToFile(reportsFolder, `storage.json`, JSON.stringify([...crawlerInstance.storage], null, "  "));
-    writeToFile(reportsFolder, `queue.json`, JSON.stringify([...crawlerInstance.queue], null, "  "));
+    writeToFile(crawlerOptions.reportsPath, `report.json`, JSON.stringify(report, null, "  "));
+    writeToFile(crawlerOptions.reportsPath, `storage.json`, JSON.stringify([...crawlerInstance.storage], null, "  "));
+    writeToFile(crawlerOptions.reportsPath, `queue.json`, JSON.stringify([...crawlerInstance.queue], null, "  "));
 
     console.log(`Done!`);
+    process.exit(0);
 });

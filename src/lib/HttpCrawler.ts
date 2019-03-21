@@ -47,6 +47,7 @@ export interface IHttpCrawlerOptions {
     knownHosts: string[];
     browserViewport: { width: number, height: number };
     ignoreLinkExtensions: string[];
+    reportsPath: string;
 }
 
 export interface IResponse {
@@ -109,27 +110,26 @@ export default class HttpCrawler {
                 result.forEach((response: IResponse) => {
                     const nodeResultRecord = storage.get(response.url);
 
-                    if (nodeResultRecord) {
-                        nodeResultRecord.status = response.status;
-                        nodeResultRecord.visited = true;
-                        storage.set(response.url, nodeResultRecord);
-                    } else {
-                        storage.set(response.url, {
-                            visited: true,
-                            isMissing: false,
-                            weight: 0,
-                            depth: this.depth,
-                            status: response.status,
-                            linksTotal: response.links.length,
-                            headers: response.headers,
-                            metrics: response.metrics,
-                            errorMessage: response.errorMessage,
-                            errorCode: response.errorCode,
-                            redirected: response.redirected,
-                            redirectStatus: response.redirectStatus,
-                            redirectOriginalLocation: response.redirectOriginalLocation,
-                        });
+                    if (nodeResultRecord && nodeResultRecord.visited) {
+                        log("Warning:", `${response.url} was already visited!`);
+                        return;
                     }
+
+                    storage.set(response.url, {
+                        visited: true,
+                        isMissing: false,
+                        weight: 0,
+                        depth: this.depth,
+                        status: response.status,
+                        linksTotal: response.links.length,
+                        headers: response.headers,
+                        metrics: response.metrics,
+                        errorMessage: response.errorMessage,
+                        errorCode: response.errorCode,
+                        redirected: response.redirected,
+                        redirectStatus: response.redirectStatus,
+                        redirectOriginalLocation: response.redirectOriginalLocation,
+                    });
 
                     response.links.forEach((childLink: string) => {
                         const childLinkRecord = storage.get(childLink);

@@ -7,6 +7,12 @@ export function writeToFile(filePath: string, fileName: string, content: string)
     fs.closeSync(fd);
 }
 
+export function appendToFile(filePath: string, fileName: string, content: string) {
+    const fd = fs.openSync(path.join(filePath, fileName), "as");
+    fs.writeFileSync(fd, content);
+    fs.closeSync(fd);
+}
+
 export function createDir(dirPath: string) {
     if (!fs.existsSync(dirPath)) {
         console.log(`Working folder doesn't exist. Creating ${dirPath} ...`);

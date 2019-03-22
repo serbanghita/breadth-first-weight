@@ -1,4 +1,4 @@
-import HttpCrawler, {IHttpCrawlerOptions, IResponse} from "./HttpCrawler";
+import HttpCrawler, { IHttpCrawlerOptions, IHttpCrawlerResponse } from "./HttpCrawler";
 
 describe("HttpCrawler", () => {
 
@@ -14,7 +14,7 @@ describe("HttpCrawler", () => {
             reportsPath: "",
         };
         const requestFn = (url: string, options: IHttpCrawlerOptions) => {
-            return Promise.resolve({}) as Promise<IResponse>;
+            return Promise.resolve({}) as Promise<IHttpCrawlerResponse>;
         };
         const c = new HttpCrawler(cOpt, requestFn);
 
@@ -40,7 +40,7 @@ describe("HttpCrawler", () => {
                     url,
                     status: 200,
                     links: ["http://test.com/a", "http://test.com/b"],
-                }) as Promise<IResponse>;
+                }) as Promise<IHttpCrawlerResponse>;
             };
             const c = new HttpCrawler(cOpt, requestFn);
             await c.search();
@@ -55,7 +55,7 @@ describe("HttpCrawler", () => {
 
         it("visiting with linkDepth 1", async () => {
             function linkGenerator(link: string) {
-                const links: {[parentLink: string]: string[]} = {
+                const links: { [parentLink: string]: string[] } = {
                     "http://test.com": ["http://test.com/a", "http://test.com/b"],
                     "http://test.com/a": ["http://test.com/a/a", "http://test.com/a/b"],
                     "http://test.com/b": ["http://test.com/b/a", "http://test.com/b/b"],
@@ -81,7 +81,7 @@ describe("HttpCrawler", () => {
                     url,
                     status: 200,
                     links: linkGenerator(url),
-                }) as Promise<IResponse>;
+                }) as Promise<IHttpCrawlerResponse>;
             };
             const c = new HttpCrawler(cOpt, requestFn);
             await c.search();
@@ -117,7 +117,7 @@ describe("HttpCrawler", () => {
                     url: "http://test.com/something-else",
                     status: 200,
                     links: ["http://test.com/a", "http://test.com/b"],
-                }) as Promise<IResponse>;
+                }) as Promise<IHttpCrawlerResponse>;
             };
             const c = new HttpCrawler(cOpt, requestFn);
             await c.search();

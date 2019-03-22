@@ -52,13 +52,13 @@
 //     console.log("catch!", err.message);
 // }
 
-class RequestError extends Error {
-    constructor(public code: string, ...params: any[]) {
-        super(...params);
+// class RequestError extends Error {
+//     constructor(public code: string, ...params: any[]) {
+//         super(...params);
 
-        this.code = code;
-    }
-}
+//         this.code = code;
+//     }
+// }
 
 // (async function() {
 //
@@ -80,24 +80,24 @@ class RequestError extends Error {
 //     }
 // })();
 
-(async () => {
+// (async () => {
 
-    function getLinks(): Promise<string[]> {
-        return new Promise((resolve, reject) => {
-            // resolve(["a", "b", "c", "d", "e"]);
-            reject(new Error(`cannot get links`));
-        });
-    }
+//     function getLinks(): Promise<string[]> {
+//         return new Promise((resolve, reject) => {
+//             // resolve(["a", "b", "c", "d", "e"]);
+//             reject(new Error(`cannot get links`));
+//         });
+//     }
 
-    const links = await getLinks()
-        .then((r) => {
-            return r.filter((a) => a === "a");
-        })
-        .catch((err) => {
-        console.log(err.message);
-        return [];
-    });
+//     const links = await getLinks()
+//         .then((r) => {
+//             return r.filter((a) => a === "a");
+//         })
+//         .catch((err) => {
+//         console.log(err.message);
+//         return [];
+//     });
 
-    console.log(links);
+//     console.log(links);
 
-})();
+// })();

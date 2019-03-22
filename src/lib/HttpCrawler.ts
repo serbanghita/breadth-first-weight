@@ -1,9 +1,13 @@
 import puppeteer from "puppeteer";
 
+function log(...msgs: string[]) {
+    console.log(msgs);
+}
+
 function sequentialFnPromises(tasks: Array<() => Promise<any>>) {
     return tasks.reduce((promiseChain: Promise<any[]>, currentTask: () => Promise<any>) => {
         return promiseChain.then((chainResults) =>
-            currentTask().then((currentResult) => [ ...chainResults, currentResult ]),
+            currentTask().then((currentResult) => [...chainResults, currentResult]),
         );
     }, Promise.resolve([]));
 }
@@ -23,7 +27,7 @@ export function chunkArray(array: any[], size: number): any[] {
     return [firstChunk].concat(chunkArray(array.slice(size, array.length), size));
 }
 
-interface IStorageItem {
+export interface IHttpCrawlerStorageItem {
     visited: boolean;
     isMissing: boolean;
     weight: number;
@@ -37,6 +41,7 @@ interface IStorageItem {
     redirected: boolean;
     redirectStatus: number;
     redirectOriginalLocation: string;
+    consoleEvents: IBrowserEventMessage[];
 }
 
 export interface IHttpCrawlerOptions {
@@ -50,7 +55,7 @@ export interface IHttpCrawlerOptions {
     reportsPath: string;
 }
 
-export interface IResponse {
+export interface IHttpCrawlerResponse {
     url: string;
     status: number;
     links: string[];
@@ -61,6 +66,17 @@ export interface IResponse {
     redirected: boolean;
     redirectStatus: number;
     redirectOriginalLocation: string;
+    consoleEvents: IBrowserEventMessage[];
+}
+
+export type BrowserEventMessageLevel = "info" | "warning" | "error";
+export type BrowserEventMessageType = "css" | "js" | "html" | "security" | "network" | "browser";
+export interface IBrowserEventMessage {
+    identifier: string;
+    level: BrowserEventMessageLevel;
+    type: BrowserEventMessageType;
+    text: string;
+    details: any;
 }
 
 export interface IHttpCrawlerMetrics extends puppeteer.Metrics {
@@ -70,13 +86,13 @@ export interface IHttpCrawlerMetrics extends puppeteer.Metrics {
 export default class HttpCrawler {
 
     public queue: Set<string> = new Set([]);
-    public storage: Map<string, IStorageItem> = new Map([]);
-    private fnArray: Array<() => Promise<IResponse>> = [];
+    public storage: Map<string, IHttpCrawlerStorageItem> = new Map([]);
+    private fnArray: Array<() => Promise<IHttpCrawlerResponse>> = [];
     private depth: number = 0;
 
     constructor(
         private options: IHttpCrawlerOptions,
-        private requestFn: (url: string, options: IHttpCrawlerOptions) => Promise<IResponse>,
+        private requestFn: (url: string, options: IHttpCrawlerOptions) => Promise<IHttpCrawlerResponse>,
     ) {
         this.queue.add(options.url);
     }
@@ -107,7 +123,7 @@ export default class HttpCrawler {
 
         const fnSequenceBatches = fnArrayBatches.map((fnArrayBatch) => {
             return () => parallelFnPromises(fnArrayBatch).then((result) => {
-                result.forEach((response: IResponse) => {
+                result.forEach((response: IHttpCrawlerResponse) => {
                     const nodeResultRecord = storage.get(response.url);
 
                     if (nodeResultRecord && nodeResultRecord.visited) {
@@ -129,6 +145,7 @@ export default class HttpCrawler {
                         redirected: response.redirected,
                         redirectStatus: response.redirectStatus,
                         redirectOriginalLocation: response.redirectOriginalLocation,
+                        consoleEvents: response.consoleEvents,
                     });
 
                     response.links.forEach((childLink: string) => {
@@ -151,6 +168,7 @@ export default class HttpCrawler {
                                 redirected: false,
                                 redirectStatus: 0,
                                 redirectOriginalLocation: "",
+                                consoleEvents: [],
                             });
                             queue.add(childLink);
                         }

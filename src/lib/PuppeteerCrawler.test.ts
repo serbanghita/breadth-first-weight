@@ -1,11 +1,58 @@
-import {__setMock} from "../__mocks__/puppeteer";
-import {IHttpCrawlerOptions} from "./HttpCrawler";
-import {requestHandleFn} from "./PuppeteerCrawler";
+import { __setMock } from "../__mocks__/puppeteer";
+import { IHttpCrawlerOptions } from "./HttpCrawler";
+import { requestHandleFn } from "./PuppeteerCrawler";
 
 describe("PuppeteerCrawler", () => {
 
     afterAll(() => {
-       jest.clearAllMocks();
+        jest.clearAllMocks();
+    });
+
+    describe("filterLinks", () => {
+
+        it("non-string links are normalized to empty string and then removed", async () => {
+            __setMock("filterLinks non-string");
+
+            const requestOptions: IHttpCrawlerOptions = {
+                url: "http://test.com",
+                requestsPerBatch: 1,
+                linkDepth: 0,
+                linkLimit: 999,
+                knownHosts: [],
+                browserViewport: { width: 1920, height: 1080 },
+                ignoreLinkExtensions: [],
+                reportsPath: "",
+            };
+
+            const response = await requestHandleFn("http://test.com/", requestOptions);
+
+            expect(response).toHaveProperty("url", "http://test.com/");
+            expect(response).toHaveProperty("status", 200);
+            expect(response).toHaveProperty("links", []);
+        });
+
+        it("non-valid links are normalized and removed", async () => {
+            __setMock("filterLinks non-valid");
+
+            const requestOptions: IHttpCrawlerOptions = {
+                url: "http://test.com",
+                requestsPerBatch: 1,
+                linkDepth: 0,
+                linkLimit: 999,
+                knownHosts: [],
+                browserViewport: { width: 1920, height: 1080 },
+                ignoreLinkExtensions: [],
+                reportsPath: "",
+            };
+
+            const response = await requestHandleFn("http://test.com/", requestOptions);
+
+            expect(response).toHaveProperty("url", "http://test.com/");
+            expect(response).toHaveProperty("status", 200);
+            expect(response.links).toHaveLength(2);
+            expect(response).toHaveProperty("links", ["http://test.com/", "http://test.com/a"]);
+        });
+
     });
 
     describe("requestHandleFn", () => {

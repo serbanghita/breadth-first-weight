@@ -2,7 +2,7 @@ import * as path from "path";
 import puppeteer, { Browser, DirectNavigationOptions, Page, Response } from "puppeteer";
 import { URL } from "url";
 import { appendToFile, writeToFile } from "./FileSystem";
-import { IHttpCrawlerMetrics, IHttpCrawlerOptions, IResponse } from "./HttpCrawler";
+import { BrowserEventMessageLevel, IBrowserEventMessage, IHttpCrawlerMetrics, IHttpCrawlerOptions, IHttpCrawlerResponse } from "./HttpCrawler";
 import HttpCrawlerContentError from "./HttpCrawlerContentError";
 import HttpCrawlerRuntimeError from "./HttpCrawlerRuntimeError";
 import { hashString } from "./Utility";
@@ -96,17 +96,7 @@ function getAllDOMLinks(): string[] {
     ) as string[];
 }
 
-export type EventMessageLevel = "info" | "warning" | "error";
-export type EventMessageType = "css" | "js" | "html" | "security" | "network" | "browser";
-export interface IBrowserEventMessage {
-    identifier: string;
-    level: EventMessageLevel;
-    type: EventMessageType;
-    text: string;
-    details: any;
-}
-
-export function isEventMessageLevel(value: EventMessageLevel | string): value is EventMessageLevel {
+export function isEventMessageLevel(value: BrowserEventMessageLevel | string): value is BrowserEventMessageLevel {
     const allowedKeys: string[] = ["info", "warning", "error"];
     return allowedKeys.find((el) => el === value) !== undefined;
 }
@@ -114,18 +104,18 @@ export function isEventMessageLevel(value: EventMessageLevel | string): value is
 /**
  * Returns an object containing data about the current HTTP response.
  * Depending on the processing added to this method, the response
- * format can vary but should always adhere to IResponse interface.
+ * format can vary but should always adhere to IHttpCrawlerResponse interface.
  *
  * @param {string} url
  * @param {IHttpCrawlerOptions} options
- * @returns {Promise<IResponse>}
+ * @returns {Promise<IHttpCrawlerResponse>}
  */
-export async function requestHandleFn(url: string, options: IHttpCrawlerOptions): Promise<IResponse> {
+export async function requestHandleFn(url: string, options: IHttpCrawlerOptions): Promise<IHttpCrawlerResponse> {
 
     let browser: Browser | undefined;
     let page: Page | undefined;
     let response: Response | undefined;
-    let pageBrowserConsoleEvents: IBrowserEventMessage[] = [];
+    const pageBrowserConsoleEvents: IBrowserEventMessage[] = [];
 
     function log(...msg: string[]) {
         // appendToFile(options.reportsPath, "messages.log", msg.join(" "));
@@ -145,8 +135,6 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
             await page.off("console", consoleListener);
             await page.close().catch((err) => log("page.close():", err.message, (page as Page).url()));
         }
-        // Clear the saved Developer Console msgs.
-        pageBrowserConsoleEvents = [];
     }
 
     // Custom event listeners.
@@ -175,7 +163,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
     }
 
     function consoleListener(msg: puppeteer.ConsoleMessage) {
-        const level = isEventMessageLevel(msg.type()) ? msg.type() as EventMessageLevel : "info";
+        const level = isEventMessageLevel(msg.type()) ? msg.type() as BrowserEventMessageLevel : "info";
         const type = "browser";
         const text = msg.text();
         const details = "";
@@ -265,6 +253,9 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
         // In case of an HTTP error, we don't care about the
         // rest of the processes and we exit with a response.
         if (response.status() >= 400) {
+            await cleanupBrowser();
+            await cleanupPage();
+
             return {
                 url,
                 status: response.status(),
@@ -276,6 +267,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
                 redirected: false,
                 redirectStatus: 0,
                 redirectOriginalLocation: "",
+                consoleEvents: pageBrowserConsoleEvents,
             };
         }
 
@@ -298,7 +290,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
         await cleanupBrowser();
         await cleanupPage();
 
-        const result: IResponse = {
+        const result: IHttpCrawlerResponse = {
             url,
             status: response.status(),
             links,
@@ -309,7 +301,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
             redirected: false,
             redirectStatus: 0,
             redirectOriginalLocation: "",
-
+            consoleEvents: pageBrowserConsoleEvents,
         };
 
         // If the request was redirected (301, 302) then
@@ -349,6 +341,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
             redirected: false,
             redirectStatus: 0,
             redirectOriginalLocation: "",
+            consoleEvents: pageBrowserConsoleEvents,
         };
     }
 }

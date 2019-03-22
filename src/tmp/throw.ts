@@ -55,8 +55,8 @@
 // strict: true in tsconfig
 
 
-function log(...msgs: string[]) {
-    console.log(msgs);
-}
+// function log(...msgs: string[]) {
+//     console.log(msgs);
+// }
 
-log("a", "b", "c");
+// log("a", "b", "c");

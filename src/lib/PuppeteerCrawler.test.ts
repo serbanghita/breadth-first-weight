@@ -20,7 +20,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
 
@@ -41,7 +41,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
 
@@ -51,6 +51,27 @@ describe("PuppeteerCrawler", () => {
             expect(response).toHaveProperty("status", 200);
             expect(response.links).toHaveLength(2);
             expect(response).toHaveProperty("links", ["http://test.com/", "http://test.com/a"]);
+        });
+
+        it("links with ignored file extensions are normalized and removed", async () => {
+            __setMock("filterLinks ignored extensions");
+
+            const requestOptions: IHttpCrawlerOptions = {
+                url: "http://test.com",
+                requestsPerBatch: 1,
+                linkDepth: 0,
+                linkLimit: 999,
+                knownHosts: [],
+                browserViewport: { width: 1920, height: 1080 },
+                ignoredLinkExtensions: ["pdf", "doc", "gif"],
+                reportsPath: "",
+            };
+
+            const response = await requestHandleFn("http://test.com/", requestOptions);
+
+            expect(response).toHaveProperty("url", "http://test.com/");
+            expect(response).toHaveProperty("status", 200);
+            expect(response.links).toHaveLength(0);
         });
 
     });
@@ -67,7 +88,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
@@ -91,7 +112,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
@@ -115,7 +136,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
@@ -139,7 +160,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
@@ -163,7 +184,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
@@ -187,7 +208,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/404", requestOptions);
@@ -211,7 +232,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
@@ -235,7 +256,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);
@@ -259,7 +280,7 @@ describe("PuppeteerCrawler", () => {
                 linkLimit: 999,
                 knownHosts: [],
                 browserViewport: { width: 1920, height: 1080 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             const response = await requestHandleFn("http://test.com/", requestOptions);

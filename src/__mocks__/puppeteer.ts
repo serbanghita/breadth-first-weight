@@ -89,6 +89,43 @@ export function __setMock(name: string): void {
                 } as Browser);
             };
             break;
+        case "filterLinks ignored extensions":
+            puppeteer.launch = (options?: LaunchOptions) => {
+                return Promise.resolve({
+                    newPage: () => Promise.resolve({
+                        setViewport: (viewport: Viewport) => Promise.resolve(),
+                        on(eventName, handler) { return this; },
+                        off(eventName, handler) { return this; },
+                        goto(url, navigationOptions) {
+                            return Promise.resolve({
+                                status: () => 200,
+                                headers: () => {
+                                    return { "content-type": "text/html;charset=utf-8" } as Headers;
+                                },
+                                request: () => {
+                                    return { redirectChain: () => [] as Request[] } as Request;
+                                },
+                            } as Response);
+                        },
+                        waitForSelector(selector: string, selectorOptions: WaitForSelectorOptions) {
+                            return Promise.resolve({}) as Promise<ElementHandle>;
+                        },
+                        evaluate<F extends EvaluateFn>(evaluateFn: F, ...evaluateFnArgs: SerializableOrJSHandle[]) {
+                            return Promise.resolve(["/a.pdf", "/a.doc", "/a.gif"]) as Promise<EvaluateFnReturnType<F>>;
+                        },
+                        metrics() {
+                            return Promise.resolve({ Timestamp: 1 });
+                        },
+                        close() {
+                            return Promise.resolve();
+                        },
+                    } as Page),
+                    close() {
+                        return Promise.resolve();
+                    },
+                } as Browser);
+            };
+            break;
         case "ERR_CREATE_BROWSER":
             puppeteer.launch = (options?: LaunchOptions) => {
                 return Promise.reject(new Error(`Launch error`));

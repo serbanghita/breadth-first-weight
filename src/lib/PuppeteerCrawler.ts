@@ -1,8 +1,13 @@
 import * as path from "path";
 import puppeteer, { Browser, DirectNavigationOptions, Page, Response } from "puppeteer";
 import { URL } from "url";
-import { appendToFile, writeToFile } from "./FileSystem";
-import { BrowserEventMessageLevel, IBrowserEventMessage, IHttpCrawlerMetrics, IHttpCrawlerOptions, IHttpCrawlerResponse } from "./HttpCrawler";
+import {
+    BrowserEventMessageLevel,
+    IBrowserEventMessage,
+    IHttpCrawlerMetrics,
+    IHttpCrawlerOptions,
+    IHttpCrawlerResponse,
+} from "./HttpCrawler";
 import HttpCrawlerContentError from "./HttpCrawlerContentError";
 import HttpCrawlerRuntimeError from "./HttpCrawlerRuntimeError";
 import { hashString } from "./Utility";
@@ -43,7 +48,7 @@ function isRootLink(linkObj: URL, knownUrlObj: URL): boolean {
  * @param {URL} knownUrlObj
  * @returns {string[]}
  */
-function filterLinks(linksFound: string[], knownUrlObj: URL): string[] {
+function filterLinks(linksFound: string[], knownUrlObj: URL, ignoredLinkExtensions: string[]): string[] {
     const matchRelativeProtocol = new RegExp(`^\/\/`, "i");
     const linksFoundFiltered = linksFound
         .map((linkHref) => {
@@ -69,6 +74,16 @@ function filterLinks(linksFound: string[], knownUrlObj: URL): string[] {
             }
 
             if (isRootLink(linkObj, knownUrlObj)) {
+                return "";
+            }
+
+            // Avoid known extensions.
+            // Note: this filter should act later as well, prior to crawling a
+            // page, by performing a HEAD request and comparing "Content-type"
+            // header value.
+            const ext = linkObj.pathname.split(".").pop();
+            console.log("ext", ext);
+            if (ext && ignoredLinkExtensions.includes(ext)) {
                 return "";
             }
 
@@ -278,7 +293,7 @@ export async function requestHandleFn(url: string, options: IHttpCrawlerOptions)
 
         const links: string[] | void = await page.evaluate(getAllDOMLinks)
             .then((linksFound) => {
-                return filterLinks(linksFound, new URL(options.url));
+                return filterLinks(linksFound, new URL(options.url), options.ignoredLinkExtensions);
             })
             .catch((err: Error) => {
                 log("page.evaluate(getAllDOMLinks):", err.message);

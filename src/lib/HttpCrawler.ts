@@ -51,7 +51,7 @@ export interface IHttpCrawlerOptions {
     linkLimit: number;
     knownHosts: string[];
     browserViewport: { width: number, height: number };
-    ignoreLinkExtensions: string[];
+    ignoredLinkExtensions: string[];
     reportsPath: string;
 }
 

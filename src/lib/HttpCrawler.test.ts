@@ -10,7 +10,7 @@ describe("HttpCrawler", () => {
             linkLimit: 1,
             knownHosts: [],
             browserViewport: { width: 100, height: 100 },
-            ignoreLinkExtensions: [],
+            ignoredLinkExtensions: [],
             reportsPath: "",
         };
         const requestFn = (url: string, options: IHttpCrawlerOptions) => {
@@ -30,7 +30,7 @@ describe("HttpCrawler", () => {
                 linkLimit: 1,
                 knownHosts: [],
                 browserViewport: { width: 100, height: 100 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             let requestFnCalls = 0;
@@ -71,7 +71,7 @@ describe("HttpCrawler", () => {
                 linkLimit: 99,
                 knownHosts: [],
                 browserViewport: { width: 100, height: 100 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             let requestFnCalls = 0;
@@ -107,7 +107,7 @@ describe("HttpCrawler", () => {
                 linkLimit: 99,
                 knownHosts: [],
                 browserViewport: { width: 100, height: 100 },
-                ignoreLinkExtensions: [],
+                ignoredLinkExtensions: [],
                 reportsPath: "",
             };
             let requestFnCalls = 0;

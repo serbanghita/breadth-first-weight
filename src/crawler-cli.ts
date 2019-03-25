@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import * as path from "path";
-import {getBorderCharacters, table} from "table";
-import {URL} from "url";
+import { getBorderCharacters, table } from "table";
+import { URL } from "url";
 import yargs from "yargs";
-import {createDir, writeToFile} from "./lib/FileSystem";
-import {default as HttpCrawler} from "./lib/HttpCrawler";
-import {requestHandleFn} from "./lib/PuppeteerCrawler";
+import { default as HttpCrawler } from "./lib/HttpCrawler";
+import { requestHandleFn } from "./lib/PuppeteerCrawler";
+import { createDir, writeToFile } from "./lib/Utility";
 
 /**
  * CLI Usage: node build/crawler-runner.js -u="https://www.mercedes-benz.ro" -d=0 -b=6
@@ -62,7 +62,7 @@ const crawlerOptions = {
     linkLimit: 9999,
     knownHosts: [""],
     browserViewport: { width: 1920, height: 1080 },
-    ignoreLinkExtensions: ["pdf", "doc", "xls", "zip", "rar", "txt", "jpg", "png", "gif"],
+    ignoredLinkExtensions: ["pdf", "doc", "xls", "zip", "rar", "txt", "jpg", "png", "gif"],
     reportsPath: path.join(process.cwd(), "reports", (new URL(cliOptions.url)).host, Date.now().toString()),
 };
 
@@ -70,29 +70,33 @@ createDir(crawlerOptions.reportsPath);
 
 const crawlerInstance = new HttpCrawler(crawlerOptions, requestHandleFn);
 
-const startTime = Date.now();
-const startMem = process.memoryUsage();
+// Statistics.
+const startTime: number = Date.now();
+let endTime: number = 0;
+const startMemory: NodeJS.MemoryUsage = process.memoryUsage();
+let endMemory: NodeJS.MemoryUsage = { rss: 0, heapTotal: 0, heapUsed: 0, external: 0 };
 
 crawlerInstance.search().then(() => {
-    const endTime = Date.now();
-    const endMem = process.memoryUsage();
+    endTime = Date.now();
+    endMemory = process.memoryUsage();
 
     console.log(`Done indexing.`);
-    const urlObj = new URL(crawlerOptions.url);
 
     const memoryReport = [
-        `Total Heap: ${Math.round((endMem.heapTotal - startMem.heapTotal) / 1024 / 1024 * 100) / 100} MB`,
-        `Heap used: ${Math.round((endMem.heapUsed - startMem.heapUsed) / 1024 / 1024 * 100) / 100} MB`,
-        `RSS: ${Math.round((endMem.rss - startMem.rss) / 1024 / 1024 * 100) / 100} MB`,
+        `Total Heap: ${Math.round((endMemory.heapTotal - startMemory.heapTotal) / 1024 / 1024 * 100) / 100} MB`,
+        `Heap used: ${Math.round((endMemory.heapUsed - startMemory.heapUsed) / 1024 / 1024 * 100) / 100} MB`,
+        `RSS: ${Math.round((endMemory.rss - startMemory.rss) / 1024 / 1024 * 100) / 100} MB`,
+        `External: ${Math.round((endMemory.external - startMemory.external) / 1024 / 1024 * 100) / 100} MB`,
     ];
 
+    const urlObj = new URL(crawlerOptions.url);
     const report = [
         ["Browser \norchestrator", "Browser batch", "Website",
             "Process \ntime", "Memory report", "Links \nfound",
             "Queue \nsize", "Max. \ndepth"],
         ["puppeteer", crawlerOptions.requestsPerBatch, urlObj.host, `${(endTime - startTime) / 1000}s`,
             memoryReport.join("\n"), crawlerInstance.storage.size, crawlerInstance.queue.size, crawlerOptions.linkDepth],
-        ];
+    ];
     const reportConfig = {
         columnDefault: { width: 15 },
         border: getBorderCharacters("ramac"),

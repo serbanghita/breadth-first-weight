@@ -1,7 +1,12 @@
 import * as React from "react";
-const storageRawData = require("../../reports/weretail-global-prod.adobecqms.net/1553246599352/storage.json");
+// const storageRawData = require("../../reports/weretail-global-prod.adobecqms.net/1553246599352/storage.json");
+const storageRawData = require("../../reports/www.mercedes-benz.ro/1553270775933/storage.json");
 import { IHttpCrawlerStorageItem } from "../../src/lib/HttpCrawler";
-import { getHrefWithoutOrigin } from "../../src/lib/Utility";
+
+export function getHrefWithoutOrigin(url: URL) {
+    return url.href.replace(new RegExp(`^${url.origin}`), "");
+}
+
 
 interface IReportAppState {
     dataMap: Map<string, IHttpCrawlerStorageItem>;
@@ -78,11 +83,25 @@ export default class ReportApp extends React.Component<{}, IReportAppState> {
             return (
                 <React.Fragment key={index}>
                     <tr className="linkRow">
-                        <td><a href={itemURL} target="_blank">{getHrefWithoutOrigin(new URL(itemURL))}</a></td>
+                        <td className="linkRow-url">
+                            <a href={itemURL} target="_blank">{getHrefWithoutOrigin(new URL(itemURL))}</a>
+                            {itemData.redirected ? (
+                                <React.Fragment>
+                                    Redirected from: <a href={itemData.redirectOriginalLocation} target="_blank">{itemData.redirectOriginalLocation}</a>
+                                </React.Fragment>
+                            ) : ``}
+                        </td>
                         <td>{itemData.weight}</td>
                         <td>{itemData.depth}</td>
                         <td>{itemData.linksTotal}</td>
-                        <td className={statusStyle}>{itemData.status}</td>
+                        <td className={statusStyle}>
+                            {itemData.status}
+                            {itemData.redirected ? (
+                                <React.Fragment>
+                                    (<span className="status-30x">{itemData.redirectStatus}</span>)
+                                </React.Fragment>
+                            ) : ``}
+                        </td>
                         <td>{itemData.metrics.JSEventListeners}</td>
                         <td>{itemData.metrics.Nodes}</td>
                         <td>{itemData.metrics.LayoutCount}</td>

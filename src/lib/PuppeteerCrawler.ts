@@ -82,7 +82,6 @@ function filterLinks(linksFound: string[], knownUrlObj: URL, ignoredLinkExtensio
             // page, by performing a HEAD request and comparing "Content-type"
             // header value.
             const ext = linkObj.pathname.split(".").pop();
-            console.log("ext", ext);
             if (ext && ignoredLinkExtensions.includes(ext)) {
                 return "";
             }
